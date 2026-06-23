@@ -132,3 +132,49 @@ export function getCurrentUser() {
     return null;
   }
 }
+
+/**
+ * Fetch a list of verified physiotherapists, optionally filtered by search query, location, and specialty.
+ */
+export async function getProviders(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.q) params.append('q', filters.q);
+  if (filters.location) params.append('location', filters.location);
+  if (filters.specialty) params.append('specialty', filters.specialty);
+  
+  const queryString = params.toString();
+  const endpoint = queryString ? `/api/physiotherapists?${queryString}` : '/api/physiotherapists';
+  
+  return apiRequest(endpoint, {
+    method: 'GET',
+  });
+}
+
+/**
+ * Fetch a specific referral by ID.
+ */
+export async function getReferralById(id) {
+  return apiRequest(`/api/referrals/${id}`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * Update the status of a referral.
+ */
+export async function updateReferralStatus(id, status) {
+  return apiRequest(`/api/referrals/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+/**
+ * Patient creates a transfer request.
+ */
+export async function createTransferRequest(data) {
+  return apiRequest('/api/referrals/transfer', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}

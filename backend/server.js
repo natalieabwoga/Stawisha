@@ -21,6 +21,12 @@ fastify.register(require('./plugins/db-init'));
 // Register the authentication routes with a prefix
 fastify.register(require('./routes/auth'), { prefix: '/api/auth' });
 
+// Register the physiotherapists routes with a prefix
+fastify.register(require('./routes/physiotherapists'), { prefix: '/api/physiotherapists' });
+
+// Register the referrals routes with a prefix
+fastify.register(require('./routes/referrals'), { prefix: '/api/referrals' });
+
 // Start the server
 const start = async () => {
   try {
