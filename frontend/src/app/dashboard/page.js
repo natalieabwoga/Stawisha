@@ -7,7 +7,7 @@ import {
   LinearProgress, CircularProgress, Divider
 } from '@mui/material';
 import {
-  AddCircleOutline, LocationOnOutlined, PhoneOutlined, EmailOutlined,
+  AddCircleOutlined, LocationOnOutlined, PhoneOutlined, EmailOutlined,
   CheckCircle, RadioButtonUnchecked, FlightTakeoffOutlined, HistoryOutlined
 } from '@mui/icons-material';
 import DashboardShell from '../../components/DashboardShell';
@@ -72,7 +72,7 @@ export default function PatientDashboard() {
         </Box>
         <Button
           variant="contained"
-          startIcon={<AddCircleOutline />}
+          startIcon={<AddCircleOutlined />}
           onClick={() => router.push('/dashboard/request-referral')}
           sx={{
             backgroundColor: '#111827',

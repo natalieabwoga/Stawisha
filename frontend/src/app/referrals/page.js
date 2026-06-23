@@ -6,7 +6,7 @@ import {
   Box, Typography, Card, Tabs, Tab, Stack, Avatar, Chip,
   CircularProgress, Divider, Button
 } from '@mui/material';
-import { AddCircleOutline, ChevronRight, SwapHorizOutlined } from '@mui/icons-material';
+import { AddCircleOutlined, ChevronRight, SwapHorizOutlined } from '@mui/icons-material';
 import DashboardShell from '../../components/DashboardShell';
 import { getReferrals, getCurrentUser } from '../../utils/api';
 
@@ -73,7 +73,7 @@ export default function ReferralsPage() {
         {isPhysio && (
           <Button
             variant="contained"
-            startIcon={<AddCircleOutline />}
+            startIcon={<AddCircleOutlined />}
             onClick={() => router.push('/referrals/new')}
             sx={{ backgroundColor: '#111827', borderRadius: '8px', '&:hover': { backgroundColor: '#1F2937' } }}
           >
@@ -83,7 +83,7 @@ export default function ReferralsPage() {
         {!isPhysio && (
           <Button
             variant="contained"
-            startIcon={<AddCircleOutline />}
+            startIcon={<AddCircleOutlined />}
             onClick={() => router.push('/dashboard/request-referral')}
             sx={{ backgroundColor: '#111827', borderRadius: '8px', '&:hover': { backgroundColor: '#1F2937' } }}
           >

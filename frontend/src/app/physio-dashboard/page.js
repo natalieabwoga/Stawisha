@@ -7,7 +7,7 @@ import {
   Grid, CircularProgress, Divider, IconButton
 } from '@mui/material';
 import {
-  AddCircleOutline, SearchOutlined, RefreshOutlined, ChevronRight,
+  AddCircleOutlined, SearchOutlined, RefreshOutlined, ChevronRight,
   AssignmentOutlined, PendingActionsOutlined, TaskAltOutlined
 } from '@mui/icons-material';
 import DashboardShell from '../../components/DashboardShell';
@@ -100,7 +100,7 @@ export default function PhysioDashboard() {
           </Button>
           <Button
             variant="contained"
-            startIcon={<AddCircleOutline />}
+            startIcon={<AddCircleOutlined />}
             onClick={() => router.push('/referrals/new')}
             sx={{ backgroundColor: '#111827', borderRadius: '8px', '&:hover': { backgroundColor: '#1F2937' } }}
           >

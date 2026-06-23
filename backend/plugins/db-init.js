@@ -57,11 +57,39 @@ async function dbInit(fastify, options) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS referrals (
+          id SERIAL PRIMARY KEY,
+          patient_id INTEGER REFERENCES patients(id) ON DELETE CASCADE,
+          referring_physio_id INTEGER REFERENCES physiotherapists(id) ON DELETE SET NULL,
+          receiving_physio_id INTEGER REFERENCES physiotherapists(id) ON DELETE SET NULL,
+          status VARCHAR(50) DEFAULT 'pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS clinical_records (
+          id SERIAL PRIMARY KEY,
+          referral_id INTEGER REFERENCES referrals(id) ON DELETE CASCADE,
+          diagnosis TEXT,
+          treatment_plan TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS password_resets (
           id SERIAL PRIMARY KEY,
           email VARCHAR(255) NOT NULL,
           token VARCHAR(255) NOT NULL,
           expires_at TIMESTAMP NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS appointments (
+          id SERIAL PRIMARY KEY,
+          patient_id INTEGER REFERENCES patients(id) ON DELETE CASCADE,
+          physio_id INTEGER REFERENCES physiotherapists(id) ON DELETE CASCADE,
+          appointment_date DATE NOT NULL,
+          appointment_time TIME NOT NULL,
+          status VARCHAR(50) DEFAULT 'scheduled',
+          notes TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
