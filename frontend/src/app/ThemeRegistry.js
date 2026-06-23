@@ -28,6 +28,10 @@ export const stawishaPalette = {
   blueSoft: '#EFF6FF',
 };
 
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
+
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -41,15 +45,7 @@ const theme = createTheme({
   },
   shape: { borderRadius: 8 },
   typography: {
-    fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
+    fontFamily: inter.style.fontFamily,
   },
   components: {
     MuiButton: {

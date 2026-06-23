@@ -105,7 +105,7 @@ module.exports = async function (fastify, opts) {
       
       await client.query(
         'INSERT INTO clinical_records (referral_id, diagnosis, treatment_plan) VALUES ($1, $2, $3)',
-        [referralId, \`Transfer to \${destinationLocation} (\${urgency})\`, reason]
+        [referralId, `Transfer to ${destinationLocation} (${urgency})`, reason]
       );
       
       await client.query('COMMIT');

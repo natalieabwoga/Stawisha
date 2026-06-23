@@ -15,6 +15,15 @@ fastify.register(require('@fastify/jwt'), {
   secret: process.env.JWT_SECRET
 });
 
+// Decorate fastify with authenticate method
+fastify.decorate('authenticate', async function (request, reply) {
+  try {
+    await request.jwtVerify();
+  } catch (err) {
+    reply.send(err);
+  }
+});
+
 // Register our custom database initialization plugin
 fastify.register(require('./plugins/db-init'));
 
