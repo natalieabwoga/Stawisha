@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import {
   DashboardOutlined, SearchOutlined, SwapHorizOutlined, NotificationsNoneOutlined,
-  MenuOutlined, LogoutOutlined, PersonOutline, AdminPanelSettingsOutlined,
+  MenuOutlined, LogoutOutlined, PersonOutlined, AdminPanelSettingsOutlined,
   ChevronLeft
 } from '@mui/icons-material';
 
@@ -83,7 +83,7 @@ export default function DashboardShell({ children, role = 'patient' }) {
       <Box sx={{ px: 2, mb: 1 }}>
         <Chip
           size="small"
-          icon={isPhysio ? <AdminPanelSettingsOutlined sx={{ fontSize: 16 }} /> : <PersonOutline sx={{ fontSize: 16 }} />}
+          icon={isPhysio ? <AdminPanelSettingsOutlined sx={{ fontSize: 16 }} /> : <PersonOutlined sx={{ fontSize: 16 }} />}
           label={isPhysio ? 'Physiotherapist' : 'Patient'}
           sx={{
             backgroundColor: '#ECFDF5',
