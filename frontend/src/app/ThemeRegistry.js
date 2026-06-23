@@ -85,7 +85,7 @@ export default function ThemeRegistry({ children }) {
       <style
         data-emotion={`${cache.key} ${names}`}
         dangerouslySetInnerHTML={{
-          value: Object.values(cache.inserted).join(' '),
+          __html: Object.values(cache.inserted).join(' '),
         }}
       />
     );
