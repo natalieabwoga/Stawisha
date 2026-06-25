@@ -5,14 +5,26 @@ require('dotenv').config();
 // Initialize Fastify with logging enabled
 const fastify = require('fastify')({ logger: true });
 
-// Register CORS plugin
 fastify.register(require('@fastify/cors'), {
-  origin: true
+  origin: true,
+  methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 });
 
 // Register the JWT plugin securely
 fastify.register(require('@fastify/jwt'), {
   secret: process.env.JWT_SECRET
+});
+
+// Register multipart support for file uploads
+fastify.register(require('@fastify/multipart'), {
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
+const path = require('path');
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/', // Serve at root so /uploads maps directly
 });
 
 // Decorate fastify with authenticate method
@@ -35,6 +47,12 @@ fastify.register(require('./routes/physiotherapists'), { prefix: '/api/physiothe
 
 // Register the referrals routes with a prefix
 fastify.register(require('./routes/referrals'), { prefix: '/api/referrals' });
+
+// Register the notifications routes with a prefix
+fastify.register(require('./routes/notifications'), { prefix: '/api/notifications' });
+
+// Register the patients routes with a prefix
+fastify.register(require('./routes/patients'), { prefix: '/api/patients' });
 
 // Start the server
 const start = async () => {

@@ -43,15 +43,15 @@ async function authRoutes(fastify, options) {
         let rows = [];
         if (userType === 'patient') {
           const result = await client.query(
-            'INSERT INTO patients (first_name, last_name, email, phone, date_of_birth, gender, address, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, email',
+            'INSERT INTO patients (first_name, last_name, email, phone, date_of_birth, gender, address, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, email, first_name, last_name, phone, date_of_birth, gender, address',
             [firstName, lastName, email, phone, dateOfBirth, gender, address, passwordHash]
           );
           rows = result.rows;
         } else {
           // Default to physiotherapist
           const result = await client.query(
-            'INSERT INTO physiotherapists (first_name, last_name, email, phone, license_number, role, clinic, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, email',
-            [firstName, lastName, email, phone, licenseNumber, role, clinic, passwordHash]
+            'INSERT INTO physiotherapists (first_name, last_name, email, phone, license_number, role, clinic, gender, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, email, first_name, last_name, phone, license_number, role, clinic, gender',
+            [firstName, lastName, email, phone, licenseNumber, role, clinic, gender, passwordHash]
           );
           rows = result.rows;
         }
@@ -110,7 +110,10 @@ async function authRoutes(fastify, options) {
         role: userRole 
       });
 
-      reply.send({ message: 'Login successful', token, role: userRole });
+      // Remove password hash before sending user object
+      const { password_hash, ...safeUser } = user;
+
+      reply.send({ message: 'Login successful', token, role: userRole, user: safeUser });
     } finally {
       client.release();
     }
@@ -119,7 +122,9 @@ async function authRoutes(fastify, options) {
   // Configure the email sender
   const nodemailer = require('nodemailer');
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -168,6 +173,9 @@ async function authRoutes(fastify, options) {
       const resetLink = `http://localhost:3002/reset-password?token=${resetToken}&email=${email}`;
 
       // 6. Send the actual email
+      // To help with local testing, log the link to the console
+      fastify.log.info(`PASSWORD RESET LINK: ${resetLink}`);
+
       await transporter.sendMail({
         from: `"Stawisha Security" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -186,7 +194,9 @@ async function authRoutes(fastify, options) {
       reply.send({ message: 'If an account exists for that email, a reset link has been sent.' });
     } catch (error) {
       fastify.log.error('Email sending failed:', error);
-      reply.code(500).send({ error: 'Failed to send reset email. Please try again later.' });
+      // For local development, still return success so the frontend doesn't show an error,
+      // as the link was already logged to the console.
+      reply.send({ message: 'If an account exists for that email, a reset link has been sent. (Check server logs if email did not arrive)' });
     } finally {
       client.release();
     }
