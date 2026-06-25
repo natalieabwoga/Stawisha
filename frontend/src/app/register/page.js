@@ -87,7 +87,7 @@ export default function RegisterPage() {
       return;
     }
 
-    if (role === 'Physiotherapist' && (!licenseNumber || !physioRole)) {
+    if (role === 'Physiotherapist' && (!licenseNumber || !physioRole || !gender)) {
       setError('Please fill in all required physiotherapist fields.');
       setLoading(false);
       return;
@@ -125,6 +125,7 @@ export default function RegisterPage() {
         payload.licenseNumber = licenseNumber;
         payload.clinic = clinic;
         payload.role = physioRole;
+        payload.gender = gender;
       }
 
       await register(payload);
@@ -396,7 +397,7 @@ export default function RegisterPage() {
                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', '&.Mui-focused fieldset': { borderColor: '#111827' } } }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={4}>
                       <Typography variant="caption" sx={{ color: '#374151', mb: 0.5, fontWeight: 600, display: 'block' }}>Job Title/Role<span style={{ color: '#EF4444' }}> *</span></Typography>
                       <TextField 
                         fullWidth 
@@ -408,7 +409,21 @@ export default function RegisterPage() {
                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', '&.Mui-focused fieldset': { borderColor: '#111827' } } }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={4}>
+                      <Typography variant="caption" sx={{ color: '#374151', mb: 0.5, fontWeight: 600, display: 'block' }}>Gender<span style={{ color: '#EF4444' }}> *</span></Typography>
+                      <TextField 
+                        select
+                        fullWidth 
+                        size="small"
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', '&.Mui-focused fieldset': { borderColor: '#111827' } } }}
+                      >
+                        <MenuItem value="Male">Male</MenuItem>
+                        <MenuItem value="Female">Female</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
                       <Typography variant="caption" sx={{ color: '#374151', mb: 0.5, fontWeight: 600, display: 'block' }}>Clinic Name</Typography>
                       <TextField 
                         fullWidth 

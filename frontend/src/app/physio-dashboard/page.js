@@ -43,7 +43,7 @@ function StatusChip({ status }) {
   return <Chip size="small" label={s.label} sx={{ backgroundColor: s.bg, color: s.color, fontWeight: 700 }} />;
 }
 
-const TABS = ['active', 'pending', 'completed'];
+const TABS = ['requests', 'active', 'pending', 'completed'];
 
 export default function PhysioDashboard() {
   const router = useRouter();
@@ -67,12 +67,14 @@ export default function PhysioDashboard() {
   useEffect(() => { load(); }, []);
 
   const counts = {
+    requests: referrals.filter((r) => r.status === 'patient_request').length,
     active: referrals.filter((r) => ['accepted', 'in_progress'].includes(r.status)).length,
     pending: referrals.filter((r) => r.status === 'pending').length,
     completed: referrals.filter((r) => r.status === 'completed').length,
   };
 
   const filtered = referrals.filter((r) => {
+    if (TABS[tab] === 'requests') return r.status === 'patient_request';
     if (TABS[tab] === 'active') return ['accepted', 'in_progress'].includes(r.status);
     if (TABS[tab] === 'pending') return r.status === 'pending';
     return r.status === 'completed';
@@ -86,7 +88,7 @@ export default function PhysioDashboard() {
             Clinician Dashboard
           </Typography>
           <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.5 }}>
-            {user?.firstName ? `Welcome back, Dr. ${user.firstName}.` : 'Manage your referrals and patient transfers.'}
+            {user?.first_name ? `Welcome back, Dr. ${user.first_name}.` : 'Manage your referrals and patient transfers.'}
           </Typography>
         </Box>
         <Stack direction="row" spacing={1.5}>
@@ -113,14 +115,17 @@ export default function PhysioDashboard() {
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
+          <StatCard icon={<AssignmentOutlined />} label="Patient Requests" value={counts.requests} tint={{ bg: '#FEF2F2', color: '#EF4444' }} />
+        </Grid>
+        <Grid item xs={12} sm={3}>
           <StatCard icon={<AssignmentOutlined />} label="Active Referrals" value={counts.active} tint={{ bg: '#EFF6FF', color: '#3B82F6' }} />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <StatCard icon={<PendingActionsOutlined />} label="Pending Referrals" value={counts.pending} tint={{ bg: '#FFFBEB', color: '#F59E0B' }} />
+        <Grid item xs={12} sm={3}>
+          <StatCard icon={<PendingActionsOutlined />} label="Pending Actions" value={counts.pending} tint={{ bg: '#FFFBEB', color: '#F59E0B' }} />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <StatCard icon={<TaskAltOutlined />} label="Completed This Month" value={counts.completed} tint={{ bg: '#ECFDF5', color: '#10B981' }} />
+        <Grid item xs={12} sm={3}>
+          <StatCard icon={<TaskAltOutlined />} label="Completed" value={counts.completed} tint={{ bg: '#ECFDF5', color: '#10B981' }} />
         </Grid>
       </Grid>
 
@@ -135,7 +140,8 @@ export default function PhysioDashboard() {
               '& .MuiTabs-indicator': { backgroundColor: '#10B981', height: 3 },
             }}
           >
-            <Tab label="Active" />
+            <Tab label={`Requests (${counts.requests})`} />
+            <Tab label={`Active (${counts.active})`} />
             <Tab label="Pending" />
             <Tab label="Completed" />
           </Tabs>
@@ -154,14 +160,25 @@ export default function PhysioDashboard() {
             <Stack divider={<Divider sx={{ borderColor: '#F3F4F6' }} />} spacing={0}>
               {filtered.map((r) => {
                 const isReceiving = r.receiving_physio_id === user?.id;
-                const counterpartName = isReceiving
-                  ? `${r.referring_first_name || ''} ${r.referring_last_name || ''}`.trim()
-                  : `${r.receiving_first_name || 'Unassigned'} ${r.receiving_last_name || ''}`.trim();
+                const isRequest = r.status === 'patient_request';
+                const counterpartName = isRequest
+                   ? 'N/A'
+                   : isReceiving
+                     ? `${r.referring_first_name || ''} ${r.referring_last_name || ''}`.trim()
+                     : `${r.receiving_first_name || 'Unassigned'} ${r.receiving_last_name || ''}`.trim();
+
+                const handleRowClick = () => {
+                  if (isRequest) {
+                    router.push(`/referrals/new?requestId=${r.id}`);
+                  } else {
+                    router.push(`/referrals/${r.id}`);
+                  }
+                };
 
                 return (
                   <Box
                     key={r.id}
-                    onClick={() => router.push(`/referrals/${r.id}`)}
+                    onClick={handleRowClick}
                     sx={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       py: 1.75, cursor: 'pointer', '&:hover': { backgroundColor: '#F9FAFB' }, borderRadius: '8px', px: 1,
@@ -176,12 +193,16 @@ export default function PhysioDashboard() {
                           {r.patient_first_name} {r.patient_last_name} <Typography component="span" variant="caption" sx={{ color: '#9CA3AF' }}>REF{String(r.id).padStart(3, '0')}</Typography>
                         </Typography>
                         <Typography variant="caption" sx={{ color: '#6B7280' }}>
-                          {isReceiving ? 'From' : 'To'} {counterpartName || r.destination_location || '—'} · {new Date(r.created_at).toLocaleDateString()}
+                          {isRequest ? `Requested Transfer to ${r.destination_location || 'Unknown'}` : `${isReceiving ? 'From' : 'To'} ${counterpartName || r.destination_location || '—'} · ${new Date(r.created_at).toLocaleDateString()}`}
                         </Typography>
                       </Box>
                     </Box>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <StatusChip status={r.status} />
+                      {isRequest ? (
+                        <Chip size="small" label="Needs Review" sx={{ backgroundColor: '#FEF2F2', color: '#991B1B', fontWeight: 700 }} />
+                      ) : (
+                        <StatusChip status={r.status} />
+                      )}
                       <ChevronRight sx={{ color: '#D1D5DB' }} fontSize="small" />
                     </Stack>
                   </Box>

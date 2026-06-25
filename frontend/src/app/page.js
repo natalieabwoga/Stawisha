@@ -46,7 +46,7 @@ export default function LandingPage() {
         >
           <Container maxWidth="lg" sx={{ py: 8, zIndex: 2, position: 'relative' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={7}>
+              <Grid xs={12} md={7}>
                 <Box sx={{ maxWidth: 650 }}>
                   
                   {/* COMPACT: Main Heading */}

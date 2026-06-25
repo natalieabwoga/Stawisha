@@ -61,38 +61,72 @@ export default function PatientDashboard() {
 
   return (
     <DashboardShell role="patient">
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: { sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800, color: '#111827' }}>
-            Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.5 }}>
-            Here's where your care journey stands today.
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddCircleOutlined />}
-          onClick={() => router.push('/dashboard/request-referral')}
-          sx={{
-            backgroundColor: '#111827',
-            py: 1.1,
-            px: 2.5,
-            borderRadius: '8px',
-            '&:hover': { backgroundColor: '#1F2937' },
-          }}
-        >
-          Request a Referral
-        </Button>
-      </Box>
+      <Grid container spacing={3}>
+        {/* Left Side: Header & Cards */}
+        <Grid item xs={12}>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: { sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#111827' }}>
+                Welcome back{user?.first_name ? `, ${user.first_name}` : ''}.
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.5 }}>
+                Here's where your care journey stands today.
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddCircleOutlined />}
+              onClick={() => router.push('/dashboard/request-referral')}
+              sx={{
+                backgroundColor: '#111827',
+                py: 1.1,
+                px: 2.5,
+                borderRadius: '8px',
+                '&:hover': { backgroundColor: '#1F2937' },
+              }}
+            >
+              Request a Referral
+            </Button>
+          </Box>
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress sx={{ color: '#10B981' }} />
-        </Box>
-      ) : (
-        <>
-          {/* Active referral tracker */}
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={5}>
+          <Card elevation={0} sx={{ p: 2.5, borderRadius: '20px', border: '1px solid #F3F4F6', height: '100%' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#111827', mb: 2 }}>
+              My Demographics
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 600 }}>Name</Typography>
+                <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500 }}>{user?.first_name} {user?.last_name}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 600 }}>Contact Info</Typography>
+                <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <EmailOutlined sx={{ fontSize: 14, color: '#6B7280' }} /> {user?.email || 'N/A'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                  <PhoneOutlined sx={{ fontSize: 14, color: '#6B7280' }} /> {user?.phone || 'N/A'}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 600 }}>Location</Typography>
+                <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <LocationOnOutlined sx={{ fontSize: 14, color: '#6B7280' }} /> {user?.address || 'Address not provided'}
+                </Typography>
+              </Box>
+            </Box>
+          </Card>
+        </Grid>
+
+            <Grid item xs={12} md={7}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress sx={{ color: '#10B981' }} />
+            </Box>
+          ) : (
+            <>
+              {/* Active referral tracker */}
           <Card elevation={0} sx={{ p: { xs: 2.5, sm: 3 }, borderRadius: '20px', border: '1px solid #F3F4F6', mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: active ? 3 : 0 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -219,6 +253,10 @@ export default function PatientDashboard() {
           </Card>
         </>
       )}
+            </Grid>
+          </Grid>
+        </Grid>
+      </Grid>
     </DashboardShell>
   );
 }

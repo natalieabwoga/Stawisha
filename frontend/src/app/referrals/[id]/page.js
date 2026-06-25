@@ -13,7 +13,7 @@ import {
   PersonOutlined, VerifiedOutlined, DownloadOutlined
 } from '@mui/icons-material';
 import DashboardShell from '../../../components/DashboardShell';
-import { getReferralById, updateReferralStatus, getCurrentUser } from '../../../utils/api';
+import { getReferralById, updateReferralStatus, getCurrentUser, BASE_URL } from '../../../utils/api';
 
 function StatusChip({ status }) {
   const map = {
@@ -80,7 +80,20 @@ export default function ReferralDetailPage() {
     try {
       const data = await getReferralById(id);
       setReferral(data?.referral || null);
-      setRecords(data?.clinicalRecords || []);
+      if (data?.referral && (data.referral.diagnosis || data.referral.documents)) {
+        setRecords([{
+          diagnosis: data.referral.diagnosis,
+          treatment_plan: data.referral.treatment_plan,
+          exercise_protocol: data.referral.exercise_protocol,
+          functional_assessment: data.referral.functional_assessment,
+          pain_mapping: data.referral.pain_mapping,
+          notes: data.referral.notes,
+          documents: data.referral.documents,
+          created_at: data.referral.record_created_at || data.referral.created_at
+        }]);
+      } else {
+        setRecords([]);
+      }
     } catch (err) {
       setError(err.message || 'Could not load this referral.');
     } finally {
@@ -105,11 +118,14 @@ export default function ReferralDetailPage() {
     }
   };
 
-  const isPhysio = user?.userType === 'physiotherapist';
-  const isReceiving = referral && user?.id === referral.receiving_physio_id;
-  const isReferring = referral && user?.id === referral.referring_physio_id;
+  const isPhysio = !!user?.clinic || !!user?.license_number || user?.userType === 'physiotherapist' || user?.role === 'physiotherapist';
+  const isPatient = !isPhysio;
+  const isReceiving = referral && String(user?.id) === String(referral.receiving_physio_id);
+  const isReferring = referral && String(user?.id) === String(referral.referring_physio_id);
+  const isPatientOwner = referral && String(user?.id) === String(referral.patient_id);
 
   const record = records[0]; // most recent clinical record
+  const documentsList = record?.documents ? (typeof record.documents === 'string' ? JSON.parse(record.documents) : record.documents) : [];
 
   if (loading) {
     return (
@@ -180,7 +196,11 @@ export default function ReferralDetailPage() {
             </Box>
             <Divider sx={{ borderColor: '#F3F4F6', mb: 2 }} />
             <InfoRow icon={<EmailOutlined fontSize="small" />} label="Email" value={referral?.patient_email} />
+            <InfoRow icon={<PhoneOutlined fontSize="small" />} label="Phone" value={referral?.patient_phone} />
             <InfoRow icon={<LocationOnOutlined fontSize="small" />} label="Destination" value={referral?.destination_location} />
+            <InfoRow icon={<LocationOnOutlined fontSize="small" />} label="Address" value={referral?.patient_address} />
+            <InfoRow icon={<PersonOutlined fontSize="small" />} label="Gender" value={referral?.patient_gender} />
+            {referral?.patient_dob && <InfoRow icon={<PersonOutlined fontSize="small" />} label="DOB" value={new Date(referral.patient_dob).toLocaleDateString()} />}
             {referral?.urgency === 'urgent' && (
               <Chip
                 size="small"
@@ -239,11 +259,16 @@ export default function ReferralDetailPage() {
             )}
           </Card>
 
+          {/* Patient Action buttons removed as referrals go directly to clinic */}
+
           {/* Action buttons */}
           {isPhysio && referral?.status === 'pending' && isReceiving && (
-            <Card elevation={0} sx={{ p: 2.5, borderRadius: '16px', border: '1px solid #F3F4F6' }}>
+            <Card elevation={0} sx={{ p: 2.5, borderRadius: '16px', border: '1px solid #F3F4F6', mb: 2.5 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#111827', mb: 1.5 }}>
-                Respond to Referral
+                Review Referral
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 2 }}>
+                Do you have the capacity to accept this patient for treatment?
               </Typography>
               <Stack spacing={1.5}>
                 <Button
@@ -264,14 +289,17 @@ export default function ReferralDetailPage() {
                   disabled={!!actionLoading}
                   sx={{ borderColor: '#FCA5A5', color: '#EF4444', borderRadius: '8px', fontWeight: 700, '&:hover': { borderColor: '#EF4444', backgroundColor: '#FEF2F2' } }}
                 >
-                  Decline
+                  Decline Referral
                 </Button>
               </Stack>
             </Card>
           )}
 
           {isPhysio && referral?.status === 'accepted' && isReceiving && (
-            <Card elevation={0} sx={{ p: 2.5, borderRadius: '16px', border: '1px solid #F3F4F6' }}>
+            <Card elevation={0} sx={{ p: 2.5, borderRadius: '16px', border: '1px solid #F3F4F6', mb: 2.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#111827', mb: 1.5 }}>
+                Start Treatment
+              </Typography>
               <Button
                 fullWidth
                 variant="contained"
@@ -315,7 +343,7 @@ export default function ReferralDetailPage() {
                 }}
               >
                 <Tab label="Clinical Summary" />
-                <Tab label={`Documents (${record?.documents?.length ?? 0})`} />
+                <Tab label={`Documents (${documentsList.length})`} />
               </Tabs>
             </Box>
 
@@ -393,7 +421,7 @@ export default function ReferralDetailPage() {
 
               {tab === 1 && (
                 <>
-                  {(!record?.documents || record.documents.length === 0) ? (
+                  {documentsList.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 5 }}>
                       <InsertDriveFileOutlined sx={{ color: '#D1D5DB', fontSize: 48, mb: 1 }} />
                       <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
@@ -402,7 +430,7 @@ export default function ReferralDetailPage() {
                     </Box>
                   ) : (
                     <Stack spacing={1.5}>
-                      {(record?.documents || []).map((doc, i) => (
+                      {documentsList.map((doc, i) => (
                         <Box
                           key={i}
                           sx={{
@@ -416,10 +444,17 @@ export default function ReferralDetailPage() {
                               <InsertDriveFileOutlined fontSize="small" />
                             </Avatar>
                             <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827' }}>
-                              {typeof doc === 'string' ? doc : doc.name || `Document ${i + 1}`}
+                              {doc.name || `Document ${i + 1}`}
                             </Typography>
                           </Box>
-                          <IconButton size="small" sx={{ color: '#6B7280' }}>
+                          <IconButton 
+                            size="small" 
+                            sx={{ color: '#3B82F6' }}
+                            component="a"
+                            href={`${BASE_URL}${doc.url}`}
+                            target="_blank"
+                            download={doc.name}
+                          >
                             <DownloadOutlined fontSize="small" />
                           </IconButton>
                         </Box>

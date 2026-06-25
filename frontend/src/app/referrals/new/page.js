@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box, Typography, Card, TextField, Button, MenuItem, Alert,
@@ -10,15 +10,20 @@ import {
   ArrowBack, CloudUploadOutlined, InsertDriveFileOutlined, Close
 } from '@mui/icons-material';
 import DashboardShell from '../../../components/DashboardShell';
-import { createReferral } from '../../../utils/api';
+import { createReferral, getReferralById, getProviders, getPatients } from '../../../utils/api';
 
 function NewReferralForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const presetProviderId = searchParams.get('providerId');
+  const requestId = searchParams.get('requestId');
 
   const [patientId, setPatientId] = useState('');
+  const [patientName, setPatientName] = useState('');
   const [receivingPhysioId, setReceivingPhysioId] = useState(presetProviderId || '');
+  const [providers, setProviders] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [fetchingData, setFetchingData] = useState(true);
   const [destinationLocation, setDestinationLocation] = useState('');
   const [reason, setReason] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
@@ -29,12 +34,41 @@ function NewReferralForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Fetch request data if we are fulfilling a patient request, and load dropdowns
+  useEffect(() => {
+    (async () => {
+      try {
+        const [provData, patData] = await Promise.all([
+          getProviders(),
+          getPatients()
+        ]);
+        setProviders(provData?.providers || []);
+        setPatients(patData?.patients || []);
+
+        if (requestId) {
+          const data = await getReferralById(requestId);
+          if (data?.referral) {
+            const ref = data.referral;
+            setPatientId(ref.patient_id.toString());
+            setPatientName(`${ref.patient_first_name} ${ref.patient_last_name}`);
+            setDestinationLocation(ref.destination_location || '');
+            setReason(ref.reason || '');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch details:", err);
+      } finally {
+        setFetchingData(false);
+      }
+    })();
+  }, [requestId]);
+
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files || []);
-    setFiles((prev) => [...prev, ...selected.map((f) => f.name)]);
+    setFiles((prev) => [...prev, ...selected]);
   };
 
-  const removeFile = (name) => setFiles((prev) => prev.filter((f) => f !== name));
+  const removeFile = (name) => setFiles((prev) => prev.filter((f) => f.name !== name));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,6 +83,7 @@ function NewReferralForm() {
     setLoading(true);
     try {
       await createReferral({
+        referralId: requestId || undefined,
         patientId: Number(patientId),
         receivingPhysioId: Number(receivingPhysioId),
         destinationLocation,
@@ -92,23 +127,53 @@ function NewReferralForm() {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" sx={{ color: '#374151', mb: 0.5, fontWeight: 600, display: 'block' }}>
-                Patient ID<span style={{ color: '#EF4444' }}> *</span>
+                Patient<span style={{ color: '#EF4444' }}> *</span>
               </Typography>
-              <TextField
-                fullWidth size="small" placeholder="Existing patient ID"
-                value={patientId} onChange={(e) => setPatientId(e.target.value)}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', '&.Mui-focused fieldset': { borderColor: '#111827' } } }}
-              />
+              {requestId ? (
+                <TextField
+                  fullWidth size="small" disabled
+                  value={patientName || 'Loading...'}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                />
+              ) : (
+                <TextField
+                  fullWidth select size="small"
+                  disabled={fetchingData}
+                  value={patientId} onChange={(e) => setPatientId(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', '&.Mui-focused fieldset': { borderColor: '#111827' } } }}
+                >
+                  {fetchingData ? (
+                    <MenuItem value="">Loading...</MenuItem>
+                  ) : (
+                    patients.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.first_name} {p.last_name} ({p.email})
+                      </MenuItem>
+                    ))
+                  )}
+                </TextField>
+              )}
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" sx={{ color: '#374151', mb: 0.5, fontWeight: 600, display: 'block' }}>
-                Receiving Physiotherapist ID<span style={{ color: '#EF4444' }}> *</span>
+                Receiving Physiotherapist<span style={{ color: '#EF4444' }}> *</span>
               </Typography>
               <TextField
-                fullWidth size="small" placeholder="From Provider Directory"
+                fullWidth select size="small"
+                disabled={fetchingData}
                 value={receivingPhysioId} onChange={(e) => setReceivingPhysioId(e.target.value)}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', '&.Mui-focused fieldset': { borderColor: '#111827' } } }}
-              />
+              >
+                {fetchingData ? (
+                  <MenuItem value="">Loading...</MenuItem>
+                ) : (
+                  providers.map((p) => (
+                    <MenuItem key={p.id} value={p.id}>
+                      Dr. {p.first_name} {p.last_name} ({p.clinic || 'No clinic specified'})
+                    </MenuItem>
+                  ))
+                )}
+              </TextField>
               <Typography variant="caption" sx={{ color: '#9CA3AF', mt: 0.5, display: 'block' }}>
                 Tip: select a provider from the <Box component="span" onClick={() => router.push('/provider-directory')} sx={{ color: '#10B981', fontWeight: 600, cursor: 'pointer' }}>Provider Directory</Box> to auto-fill this.
               </Typography>
@@ -206,12 +271,12 @@ function NewReferralForm() {
 
           {files.length > 0 && (
             <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {files.map((f) => (
+              {files.map((f, i) => (
                 <Chip
-                  key={f}
+                  key={i}
                   icon={<InsertDriveFileOutlined sx={{ fontSize: 16 }} />}
-                  label={f}
-                  onDelete={() => removeFile(f)}
+                  label={f.name}
+                  onDelete={() => removeFile(f.name)}
                   deleteIcon={<Close sx={{ fontSize: 14 }} />}
                   sx={{ backgroundColor: '#F3F4F6', color: '#374151', fontWeight: 500 }}
                 />

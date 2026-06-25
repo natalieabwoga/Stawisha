@@ -1,4 +1,4 @@
-const BASE_URL = 'http://127.0.0.1:3001';
+export const BASE_URL = 'http://127.0.0.1:3001';
 
 /**
  * Standard fetch wrapper helper that manages baseline headers,
@@ -54,6 +54,11 @@ export async function login(email, password) {
   
   if (data?.token && typeof window !== 'undefined') {
     localStorage.setItem('token', data.token);
+    if (data.user) {
+      // Attach the role to the user object before caching it
+      data.user.role = data.role;
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
   }
   
   return data;
@@ -75,10 +80,36 @@ export async function register(data) {
  * @param {object} data - { patientName, patientContact, receivingPhysioId, diagnosis, treatmentPlan }
  */
 export async function createReferral(data) {
-  return apiRequest('/api/referrals', {
-    method: 'POST',
-    body: JSON.stringify(data),
+  const formData = new FormData();
+  
+  // Append all non-document fields
+  Object.keys(data).forEach(key => {
+    if (key !== 'documents' && data[key] !== undefined && data[key] !== null) {
+      formData.append(key, data[key]);
+    }
   });
+
+  // Append actual File objects if present
+  if (data.documents && Array.isArray(data.documents)) {
+    data.documents.forEach((file) => {
+      formData.append('documents', file);
+    });
+  }
+
+  // Ensure token is passed
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  // For FormData, do not set Content-Type header manually
+  const res = await fetch(`${BASE_URL}/api/referrals`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.error || resData.message || 'API request failed');
+  return resData;
 }
 
 /**
@@ -176,5 +207,34 @@ export async function createTransferRequest(data) {
   return apiRequest('/api/referrals/transfer', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update patient profile settings.
+ */
+export async function updatePatientProfile(data) {
+  return apiRequest('/api/patients/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update physiotherapist profile settings.
+ */
+export async function updatePhysioProfile(data) {
+  return apiRequest('/api/physiotherapists/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Fetch a list of all patients (physiotherapists only).
+ */
+export async function getPatients() {
+  return apiRequest('/api/patients', {
+    method: 'GET',
   });
 }
