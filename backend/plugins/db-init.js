@@ -51,8 +51,12 @@ async function dbInit(fastify, options) {
           email VARCHAR(255) UNIQUE NOT NULL,
           phone VARCHAR(50),
           license_number VARCHAR(100),
+          gender VARCHAR(50),
           role VARCHAR(100),
           clinic VARCHAR(255),
+          location VARCHAR(100) DEFAULT 'Nairobi',
+          availability VARCHAR(50) DEFAULT 'Available',
+          verification_status VARCHAR(50) DEFAULT 'verified',
           password_hash VARCHAR(255) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -63,6 +67,9 @@ async function dbInit(fastify, options) {
           referring_physio_id INTEGER REFERENCES physiotherapists(id) ON DELETE SET NULL,
           receiving_physio_id INTEGER REFERENCES physiotherapists(id) ON DELETE SET NULL,
           status VARCHAR(50) DEFAULT 'pending',
+          destination_location VARCHAR(255),
+          reason TEXT,
+          urgency VARCHAR(50) DEFAULT 'standard',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -71,6 +78,21 @@ async function dbInit(fastify, options) {
           referral_id INTEGER REFERENCES referrals(id) ON DELETE CASCADE,
           diagnosis TEXT,
           treatment_plan TEXT,
+          exercise_protocol TEXT,
+          functional_assessment TEXT,
+          pain_mapping TEXT,
+          notes TEXT,
+          documents JSONB DEFAULT '[]',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS notifications (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          user_type VARCHAR(50) NOT NULL,
+          message TEXT NOT NULL,
+          type VARCHAR(50),
+          is_read BOOLEAN DEFAULT FALSE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -93,6 +115,12 @@ async function dbInit(fastify, options) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
+
+      // Safely add the gender column to existing physiotherapists tables if it doesn't exist
+      await client.query(`
+        ALTER TABLE physiotherapists ADD COLUMN IF NOT EXISTS gender VARCHAR(50);
+      `);
+
       fastify.log.info('Database tables initialized successfully.');
     } catch (error) {
       fastify.log.error('Error initializing database tables:', error);
