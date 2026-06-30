@@ -86,7 +86,7 @@ export default function LandingPage() {
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle1" sx={{ color: '#111827', fontWeight: 600, lineHeight: 1.2, fontSize: '1.1rem' }}>
-                          Global Care Network
+                          Integrated Care Network
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.5, fontSize: '0.95rem' }}>
                           Find trusted physiotherapists wherever you are.

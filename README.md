@@ -25,7 +25,7 @@ Welcome to the **Stawisha** repository! Stawisha is a modern, containerized heal
 
 ---
 
-##  Getting Started (Beginner Friendly)
+##  Getting Started 
 
 Follow these step-by-step instructions to get a copy of the project up and running on your local machine for development and testing.
 
