@@ -36,7 +36,7 @@ This command will:
 
 ### 4. Access the Application
 Once the containers are running, you can access the application in your browser:
-- **Frontend App**: [http://localhost:3000](http://localhost:3000)
+- **Frontend App**: [http://localhost:3002](http://localhost:3002)
 - **Backend API**: [http://localhost:3001](http://localhost:3001)
 
 ### Stopping the Services

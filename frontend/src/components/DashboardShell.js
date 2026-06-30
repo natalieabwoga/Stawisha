@@ -89,15 +89,21 @@ export default function DashboardShell({ children, role = 'patient' }) {
     const rawRole = (currentUser.role || currentUser.user_type || currentUser.userType || 'patient').toLowerCase();
     const isPatient = rawRole === 'patient';
     const isPhysiotherapist = rawRole === 'physiotherapist' || rawRole === 'physio';
+    const isAdmin = rawRole === 'admin';
 
     // Strict Role-Based Routing
-    if (isPhysiotherapist && (pathname === '/dashboard' || pathname.startsWith('/dashboard/'))) {
+    if (isPhysiotherapist && (pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname.startsWith('/admin/dashboard'))) {
       router.push('/physio-dashboard');
       return;
     }
 
-    if (isPatient && pathname.startsWith('/physio-dashboard')) {
+    if (isPatient && (pathname.startsWith('/physio-dashboard') || pathname.startsWith('/admin/dashboard'))) {
       router.push('/dashboard');
+      return;
+    }
+    
+    if (isAdmin && !pathname.startsWith('/admin')) {
+      router.push('/admin/dashboard');
       return;
     }
 
@@ -126,18 +132,26 @@ export default function DashboardShell({ children, role = 'patient' }) {
 
   const normalizedRole = (user?.role || user?.user_type || user?.userType || 'patient').toLowerCase();
   const isPhysio = normalizedRole === 'physiotherapist' || normalizedRole === 'physio';
+  const isAdmin = normalizedRole === 'admin';
 
-  const navItems = isPhysio
-    ? [
-        { label: 'Dashboard', href: '/physio-dashboard', icon: <DashboardOutlined /> },
-        { label: 'Provider Directory', href: '/provider-directory', icon: <SearchOutlined /> },
-        { label: 'Referrals', href: '/referrals', icon: <SwapHorizOutlined /> },
-      ]
-    : [
-        { label: 'Dashboard', href: '/dashboard', icon: <DashboardOutlined /> },
-        { label: 'My Referrals', href: '/referrals', icon: <SwapHorizOutlined /> },
-        { label: 'Request Referral', href: '/dashboard/request-referral', icon: <SearchOutlined /> },
-      ];
+  let navItems = [];
+  if (isAdmin) {
+    navItems = [
+      { label: 'Admin Dashboard', href: '/admin/dashboard', icon: <AdminPanelSettingsOutlined /> }
+    ];
+  } else if (isPhysio) {
+    navItems = [
+      { label: 'Dashboard', href: '/physio-dashboard', icon: <DashboardOutlined /> },
+      { label: 'Provider Directory', href: '/provider-directory', icon: <SearchOutlined /> },
+      { label: 'Referrals', href: '/referrals', icon: <SwapHorizOutlined /> },
+    ];
+  } else {
+    navItems = [
+      { label: 'Dashboard', href: '/dashboard', icon: <DashboardOutlined /> },
+      { label: 'My Referrals', href: '/referrals', icon: <SwapHorizOutlined /> },
+      { label: 'Request Referral', href: '/dashboard/request-referral', icon: <SearchOutlined /> },
+    ];
+  }
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -154,7 +168,9 @@ export default function DashboardShell({ children, role = 'patient' }) {
   const userGender = (user?.gender || 'Male').toLowerCase();
   
   let imagePath = '';
-  if (isPhysio) {
+  if (isAdmin) {
+    imagePath = '/admin.png';
+  } else if (isPhysio) {
     imagePath = userGender === 'female' ? '/FemalePhysiotherapist.png' : '/MalePhysiotherapist.png';
   } else {
     imagePath = userGender === 'female' ? '/FemalePatient.png' : '/MalePatient.png';

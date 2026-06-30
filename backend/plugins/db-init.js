@@ -114,12 +114,33 @@ async function dbInit(fastify, options) {
           notes TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS admins (
+          id SERIAL PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password_hash VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
       `);
 
       // Safely add the gender column to existing physiotherapists tables if it doesn't exist
       await client.query(`
         ALTER TABLE physiotherapists ADD COLUMN IF NOT EXISTS gender VARCHAR(50);
       `);
+
+      // Seed default admin if none exist
+      const adminCheck = await client.query('SELECT COUNT(*) FROM admins');
+      if (parseInt(adminCheck.rows[0].count) === 0) {
+        // Password is 'Admin123!'
+        const bcrypt = require('bcrypt');
+        const defaultHash = await bcrypt.hash('Admin123!', 10);
+        await client.query(
+          'INSERT INTO admins (email, password_hash) VALUES ($1, $2)',
+          ['admin@stawisha.com', defaultHash]
+        );
+        fastify.log.info('Default admin seeded: admin@stawisha.com');
+      }
 
       fastify.log.info('Database tables initialized successfully.');
     } catch (error) {

@@ -54,6 +54,9 @@ fastify.register(require('./routes/notifications'), { prefix: '/api/notification
 // Register the patients routes with a prefix
 fastify.register(require('./routes/patients'), { prefix: '/api/patients' });
 
+// Register the admin routes with a prefix
+fastify.register(require('./routes/admin'), { prefix: '/api/admin' });
+
 // Start the server
 const start = async () => {
   try {

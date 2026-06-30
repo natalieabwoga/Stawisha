@@ -238,3 +238,58 @@ export async function getPatients() {
     method: 'GET',
   });
 }
+
+/**
+ * Fetch Admin Stats
+ */
+export async function getAdminStats() {
+  return apiRequest('/api/admin/stats', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Fetch Admin Patients
+ */
+export async function getAdminPatients() {
+  return apiRequest('/api/admin/patients', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Fetch Admin Physiotherapists
+ */
+export async function getAdminPhysios() {
+  return apiRequest('/api/admin/physiotherapists', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Fetch Admin Referrals
+ */
+export async function getAdminReferrals() {
+  return apiRequest('/api/admin/referrals', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Delete a Patient (Admin)
+ */
+export async function deleteAdminPatient(id) {
+  return apiRequest(`/api/admin/patients/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Delete a Physiotherapist (Admin)
+ */
+export async function deleteAdminPhysio(id) {
+  return apiRequest(`/api/admin/physiotherapists/${id}`, {
+    method: 'DELETE',
+  });
+}
+

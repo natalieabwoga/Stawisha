@@ -79,17 +79,24 @@ async function authRoutes(fastify, options) {
       let user = null;
       let userRole = null;
 
-      // First check physiotherapists
-      const physioRes = await client.query('SELECT * FROM physiotherapists WHERE email = $1', [email]);
-      if (physioRes.rows.length > 0) {
-        user = physioRes.rows[0];
-        userRole = 'physiotherapist';
+      // First check admins
+      const adminRes = await client.query('SELECT * FROM admins WHERE email = $1', [email]);
+      if (adminRes.rows.length > 0) {
+        user = adminRes.rows[0];
+        userRole = 'admin';
       } else {
-        // If not found, check patients
-        const patientRes = await client.query('SELECT * FROM patients WHERE email = $1', [email]);
-        if (patientRes.rows.length > 0) {
-          user = patientRes.rows[0];
-          userRole = 'patient';
+        // Then check physiotherapists
+        const physioRes = await client.query('SELECT * FROM physiotherapists WHERE email = $1', [email]);
+        if (physioRes.rows.length > 0) {
+          user = physioRes.rows[0];
+          userRole = 'physiotherapist';
+        } else {
+          // If not found, check patients
+          const patientRes = await client.query('SELECT * FROM patients WHERE email = $1', [email]);
+          if (patientRes.rows.length > 0) {
+            user = patientRes.rows[0];
+            userRole = 'patient';
+          }
         }
       }
 
