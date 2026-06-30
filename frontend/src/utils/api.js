@@ -293,3 +293,13 @@ export async function deleteAdminPhysio(id) {
   });
 }
 
+/**
+ * Verify a Physiotherapist (Admin)
+ */
+export async function verifyAdminPhysio(id) {
+  return apiRequest(`/api/admin/physiotherapists/${id}/verify`, {
+    method: 'PUT',
+    body: JSON.stringify({}),
+  });
+}
+

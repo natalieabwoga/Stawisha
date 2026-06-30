@@ -9,10 +9,10 @@ import {
 } from '@mui/material';
 import {
   PeopleOutlined, LocalHospitalOutlined, SyncAltOutlined, SettingsOutlined,
-  DeleteOutlined, VisibilityOutlined
+  DeleteOutlined, VisibilityOutlined, CheckCircleOutlined
 } from '@mui/icons-material';
 import DashboardShell from '../../../components/DashboardShell';
-import { getAdminStats, getAdminPatients, getAdminPhysios, getAdminReferrals, deleteAdminPatient, deleteAdminPhysio } from '../../../utils/api';
+import { getAdminStats, getAdminPatients, getAdminPhysios, getAdminReferrals, deleteAdminPatient, deleteAdminPhysio, verifyAdminPhysio } from '../../../utils/api';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -50,6 +50,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleVerifyPhysio = async (id) => {
+    try {
+      await verifyAdminPhysio(id);
+      await loadData();
+    } catch (err) {
+      alert(err.message || 'Failed to verify physiotherapist.');
+    }
+  };
 
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
@@ -253,9 +262,16 @@ export default function AdminDashboard() {
                           <TableCell>Dr. {row.first_name} {row.last_name}</TableCell>
                           <TableCell>{row.license_number}</TableCell>
                           <TableCell>
-                            <Chip size="small" label={row.verification_status} color="success" />
+                            <Chip size="small" label={row.verification_status} color={row.verification_status === 'verified' ? "success" : "warning"} sx={{ textTransform: 'capitalize' }} />
                           </TableCell>
                           <TableCell align="right">
+                            {row.verification_status === 'pending' && (
+                              <Tooltip title="Verify Physiotherapist">
+                                <IconButton size="small" onClick={() => handleVerifyPhysio(row.id)} sx={{ color: '#10B981', mr: 1 }}>
+                                  <CheckCircleOutlined fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                             <Tooltip title="Delete Physiotherapist">
                               <IconButton size="small" onClick={() => openDeleteModal('physio', row.id, `Dr. ${row.first_name} ${row.last_name}`)} sx={{ color: '#EF4444' }}>
                                 <DeleteOutlined fontSize="small" />

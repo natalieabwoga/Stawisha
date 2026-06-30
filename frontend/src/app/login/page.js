@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Box, Container, Typography, TextField, Button, 
@@ -19,6 +19,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('registered') === 'true') {
+        setSuccessMessage('Registration successful! Please give us a few minutes to verify your credentials. An email will be sent once verified.');
+      }
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -126,6 +136,22 @@ export default function LoginPage() {
             <Typography variant="body2" sx={{ color: '#6B7280', mb: 3 }}>
               Sign in to continue your care journey.
             </Typography>
+
+            {successMessage && (
+              <Alert 
+                severity="success" 
+                variant="outlined"
+                sx={{ 
+                  mb: 2, 
+                  py: 0,
+                  borderRadius: '8px',
+                  color: '#10B981',
+                  borderColor: '#10B981'
+                }}
+              >
+                {successMessage}
+              </Alert>
+            )}
 
             {error && (
               <Alert 

@@ -50,8 +50,8 @@ async function authRoutes(fastify, options) {
         } else {
           // Default to physiotherapist
           const result = await client.query(
-            'INSERT INTO physiotherapists (first_name, last_name, email, phone, license_number, role, clinic, gender, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, email, first_name, last_name, phone, license_number, role, clinic, gender',
-            [firstName, lastName, email, phone, licenseNumber, role, clinic, gender, passwordHash]
+            'INSERT INTO physiotherapists (first_name, last_name, email, phone, license_number, role, clinic, gender, password_hash, verification_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, first_name, last_name, phone, license_number, role, clinic, gender, verification_status',
+            [firstName, lastName, email, phone, licenseNumber, role, clinic, gender, passwordHash, 'pending']
           );
           rows = result.rows;
         }
@@ -102,6 +102,11 @@ async function authRoutes(fastify, options) {
 
       if (!user) {
         return reply.code(401).send({ error: 'Invalid email or password' });
+      }
+
+      // Check verification status for physiotherapists
+      if (userRole === 'physiotherapist' && user.verification_status !== 'verified') {
+        return reply.code(403).send({ error: 'Your account is pending verification by an administrator.' });
       }
 
       // Compare the provided password with the stored hash

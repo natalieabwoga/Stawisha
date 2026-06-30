@@ -56,7 +56,7 @@ async function dbInit(fastify, options) {
           clinic VARCHAR(255),
           location VARCHAR(100) DEFAULT 'Nairobi',
           availability VARCHAR(50) DEFAULT 'Available',
-          verification_status VARCHAR(50) DEFAULT 'verified',
+          verification_status VARCHAR(50) DEFAULT 'pending',
           password_hash VARCHAR(255) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );

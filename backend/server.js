@@ -5,6 +5,18 @@ require('dotenv').config();
 // Initialize Fastify with logging enabled
 const fastify = require('fastify')({ logger: true });
 
+// Allow empty JSON bodies to prevent FST_ERR_CTP_EMPTY_JSON_BODY errors
+fastify.removeContentTypeParser('application/json');
+fastify.addContentTypeParser('application/json', { parseAs: 'string' }, function (req, body, done) {
+  try {
+    var json = body ? JSON.parse(body) : {};
+    done(null, json);
+  } catch (err) {
+    err.statusCode = 400;
+    done(err, undefined);
+  }
+});
+
 fastify.register(require('@fastify/cors'), {
   origin: true,
   methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH'],

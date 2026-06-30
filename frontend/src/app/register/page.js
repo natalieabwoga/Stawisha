@@ -129,11 +129,14 @@ export default function RegisterPage() {
       }
 
       await register(payload);
-      // Auto login after registration
-      await login(email, password);
+      
       if (userType === 'physiotherapist') {
-        router.push('/physio-dashboard');
+        // Do not auto-login physios since they are pending verification.
+        // Redirect them to the login page instead.
+        router.push('/login?registered=true');
       } else {
+        // Auto login for patients
+        await login(email, password);
         router.push('/dashboard');
       }
     } catch (err) {

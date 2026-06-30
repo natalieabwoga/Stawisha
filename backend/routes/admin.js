@@ -120,4 +120,60 @@ module.exports = async function (fastify, opts) {
       client.release();
     }
   });
+
+  // PUT /api/admin/physiotherapists/:id/verify
+  fastify.put('/physiotherapists/:id/verify', { preHandler: [verifyAdmin] }, async (request, reply) => {
+    const client = await fastify.pg.connect();
+    try {
+      const { id } = request.params;
+      const res = await client.query(
+        "UPDATE physiotherapists SET verification_status = 'verified' WHERE id = $1 RETURNING id, first_name, email",
+        [id]
+      );
+      if (res.rows.length === 0) {
+        return reply.code(404).send({ error: 'Physiotherapist not found' });
+      }
+
+      const physio = res.rows[0];
+
+      // Send verification email
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      try {
+        await transporter.sendMail({
+          from: `"Stawisha Admin" <${process.env.EMAIL_USER}>`,
+          to: physio.email,
+          subject: 'Stawisha - Account Verified!',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px;">
+              <h2 style="color: #10B981;">Account Verified</h2>
+              <p style="color: #4B5563; font-size: 16px;">Hello Dr. ${physio.first_name},</p>
+              <p style="color: #4B5563; font-size: 16px;">Great news! Your professional credentials have been successfully verified by our administration team.</p>
+              <p style="color: #4B5563; font-size: 16px;">You can now log in to your Stawisha dashboard and begin receiving patient referrals.</p>
+              <a href="http://localhost:3002/login" style="display: inline-block; background-color: #111827; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0;">Log In Now</a>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        fastify.log.error('Failed to send verification email:', emailErr);
+        // Continue even if email fails, so we don't return an error to the admin
+      }
+
+      return { success: true, message: 'Physiotherapist verified successfully' };
+    } catch (err) {
+      fastify.log.error(err);
+      return reply.code(500).send({ error: 'Failed to verify physiotherapist' });
+    } finally {
+      client.release();
+    }
+  });
 };
